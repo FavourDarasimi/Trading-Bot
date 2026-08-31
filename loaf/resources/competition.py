@@ -1,0 +1,59 @@
+"""Trading competition: rounds info, your queue position, prize payout details.
+
+While a competition round is ACTIVE, order placement is restricted to admitted
+participants (a non-admitted account gets
+:class:`~loaf.exceptions.CompetitionEligibilityError`), so a bot should check
+its standing here. Outside an active round trading is unrestricted.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from ..exceptions import _client_validation_error
+from .base import Resource
+
+
+class CompetitionResource(Resource):
+    def info(self) -> Any:
+        """``GET /competition`` — public competition overview.
+
+        Returns ``{rounds, featuredRound, makerFeeBps, takerFeeBps, queueCount}``.
+        ``rounds`` is a per-round summary list (``roundNumber``, ``name``,
+        ``startsAt``/``endsAt``, ``status``, ``totalPrizePool``,
+        ``participantBatchSize``); ``featuredRound`` (or ``null``) adds
+        ``rules``, ``startingBalanceUsdl``, ``prizePool``,
+        ``volumeMultiplierTiers`` and the round's headline ``newAssetProperty``.
+        Round ``status`` is one of :class:`~loaf.enums.CompetitionRoundStatus`.
+        """
+        return self._client.get("/competition", auth=False)
+
+    def queue_position(self) -> Any:
+        """``GET /competition/queue-position`` — your own competition standing.
+
+        Returns ``{position, queueCount, finalPlacement, referralCount,
+        priorityBoostPlaces, maxBoostsPerUser}``. ``position`` and
+        ``finalPlacement`` are mutually exclusive: still queued -> ``position``
+        set; a past participant between rounds -> ``finalPlacement`` set. An
+        admitted user (able to trade) has neither.
+        """
+        return self._client.get("/competition/queue-position")
+
+    def submit_payout_details(
+        self, *, wallet_address: str | None = None, email: str | None = None
+    ) -> Any:
+        """``POST /competition/payout-details`` — nominate where prize money goes.
+
+        For competition WINNERS only (403 otherwise). Provide EXACTLY ONE of
+        ``wallet_address`` (an on-chain address) or ``email``. Re-submitting
+        overwrites the prior choice. Returns ``{eligible, roundNumber, place,
+        submission}``.
+        """
+        if (wallet_address is None) == (email is None):
+            raise _client_validation_error(
+                "Provide exactly one of wallet_address or email"
+            )
+        return self._client.post(
+            "/competition/payout-details",
+            json={"walletAddress": wallet_address, "email": email},
+        )

@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "loaf-bot"
+version = "0.2.0"
+description = "Python SDK and bot template for the Loaf trading platform API"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Loaf Markets" }]
+keywords = ["loaf", "trading", "real-estate", "api", "sdk", "bot", "websocket"]
+
+# Runtime dependencies are intentionally minimal.
+dependencies = [
+    "httpx>=0.27",        # REST client (timeouts, HTTP/2, clean errors)
+    "websockets>=12.0",   # real-time market & portfolio feeds
+]
+
+[project.optional-dependencies]
+# `pip install -e ".[dotenv]"` to load a .env file automatically in the examples.
+dotenv = ["python-dotenv>=1.0"]
+# `pip install -e ".[dev]"` for the test suite.
+dev = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://loafmarkets.com"
+
+[tool.setuptools.packages.find]
+include = ["loaf*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
